@@ -1322,25 +1322,11 @@ int RunModelOrientationAligner(int argc, char** argv) {
   std::string output_path;
   std::string method = "MANHATTAN-WORLD";
 
-  ManhattanWorldFrameEstimationOptions frame_estimation_options;
-
   OptionManager options;
   options.AddImageOptions();
   options.AddRequiredOption("input_path", &input_path);
   options.AddRequiredOption("output_path", &output_path);
-  options.AddDefaultOption("method", &method,
-                           "{MANHATTAN-WORLD, IMAGE-ORIENTATION}");
-  options.AddDefaultOption("max_image_size",
-                           &frame_estimation_options.max_image_size);
   options.Parse(argc, argv);
-
-  StringToLower(&method);
-  if (method != "manhattan-world" && method != "image-orientation") {
-    std::cout << "ERROR: Invalid `method` - supported values are "
-                 "'MANHATTAN-WORLD' or 'IMAGE-ORIENTATION'."
-              << std::endl;
-    return EXIT_FAILURE;
-  }
 
   Reconstruction reconstruction;
   reconstruction.Read(input_path);
@@ -1349,27 +1335,9 @@ int RunModelOrientationAligner(int argc, char** argv) {
 
   Eigen::Matrix3d tform;
 
-  if (method == "manhattan-world") {
-    const Eigen::Matrix3d frame = EstimateManhattanWorldFrame(
-        frame_estimation_options, reconstruction, *options.image_path);
-
-    if (frame.col(0).nonZeros() == 0) {
-      std::cout << "Only aligning vertical axis" << std::endl;
-      tform = RotationFromUnitVectors(frame.col(1), Eigen::Vector3d(0, 1, 0));
-    } else if (frame.col(1).nonZeros() == 0) {
-      tform = RotationFromUnitVectors(frame.col(0), Eigen::Vector3d(1, 0, 0));
-      std::cout << "Only aligning horizontal axis" << std::endl;
-    } else {
-      tform = frame.transpose();
-      std::cout << "Aligning horizontal and vertical axes" << std::endl;
-    }
-  } else if (method == "image-orientation") {
-    const Eigen::Vector3d gravity_axis =
-        EstimateGravityVectorFromImageOrientation(reconstruction);
-    tform = RotationFromUnitVectors(gravity_axis, Eigen::Vector3d(0, 1, 0));
-  } else {
-    LOG(FATAL) << "Alignment method not supported";
-  }
+  const Eigen::Vector3d gravity_axis =
+      EstimateGravityVectorFromImageOrientation(reconstruction);
+  tform = RotationFromUnitVectors(gravity_axis, Eigen::Vector3d(0, 1, 0));
 
   std::cout << "Using the rotation matrix:" << std::endl;
   std::cout << tform << std::endl;

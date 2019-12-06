@@ -37,7 +37,6 @@ endif()
 
 add_subdirectory(FLANN)
 add_subdirectory(Graclus)
-add_subdirectory(LSD)
 add_subdirectory(PBA)
 add_subdirectory(PoissonRecon)
 add_subdirectory(SiftGPU)
