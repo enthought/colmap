@@ -47,8 +47,6 @@ LicenseWidget::LicenseWidget(QWidget* parent) : QTextEdit(parent) {
   licenses += GetFLANNLicense();
   licenses += "<h3>Graclus</h3>";
   licenses += GetGraclusLicense();
-  licenses += "<h3>LSD</h3>";
-  licenses += GetLSDLicense();
   licenses += "<h3>PBA</h3>";
   licenses += GetPBALicense();
   licenses += "<h3>PoissonRecon</h3>";
@@ -163,36 +161,6 @@ QString LicenseWidget::GetGraclusLicense() const {
       "GNU General Public License for more details.<br><br>"
       "You should have received a copy of the GNU General Public License<br>"
       "along with this program.  If not, see http://www.gnu.org/licenses/.";
-  return license;
-}
-
-QString LicenseWidget::GetLSDLicense() const {
-  const QString license =
-      "LSD - Line Segment Detector on digital images<br>"
-      "<br>"
-      "This code is part of the following publication and was subject<br>"
-      "to peer review:"
-      "<br>"
-      "  \"LSD: a Line Segment Detector\" by Rafael Grompone von Gioi,<br>"
-      "  Jeremie Jakubowicz, Jean-Michel Morel, and Gregory Randall,<br>"
-      "  Image Processing On Line, 2012. DOI:10.5201/ipol.2012.gjmr-lsd<br>"
-      "  http://dx.doi.org/10.5201/ipol.2012.gjmr-lsd<br>"
-      "<br>"
-      "Copyright(c) 2007-2011 rafael grompone von gioi <grompone@gmail.com><br>"
-      "<br>"
-      "This program is free software: you can redistribute it and/or<br>"
-      "modify it under the terms of the GNU Affero General Public License<br>"
-      "as published by the Free Software Foundation, either version 3 of<br>"
-      "the License, or (at your option) any later version.<br>"
-      "<br>"
-      "This program is distributed in the hope that it will be useful,<br>"
-      "but WITHOUT ANY WARRANTY; without even the implied warranty of<br>"
-      "MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the<br>"
-      "GNU Affero General Public License for more details.<br>"
-      "<br>"
-      "You should have received a copy of the GNU Affero General Public<br>"
-      "License along with this program.<br>"
-      "If not, see http://www.gnu.org/licenses/.";
   return license;
 }
 

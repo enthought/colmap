@@ -1,3 +1,5 @@
+*This is just a fork of COLMAP without Manhattan world alignment feature. This feature uses `lsd` library, which is AGPLed. Removing `lsd`, therefore removing Manhattan world alignment feature correspondingly, makes COLMAP binaries free of AGPL obligations.*
+
 COLMAP
 ======
 
