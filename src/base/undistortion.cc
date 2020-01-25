@@ -798,14 +798,14 @@ Camera UndistortCamera(const UndistortCameraOptions& options,
 
     for (size_t y = roi_min_y; y < roi_max_y; ++y) {
       // Left border.
-      const Eigen::Vector2d world_point1 =
+      const Eigen::Vector3d world_point1 =
           camera.ImageToWorld(Eigen::Vector2d(0.5, y + 0.5));
       const Eigen::Vector2d undistorted_point1 =
           undistorted_camera.WorldToImage(world_point1);
       left_min_x = std::min(left_min_x, undistorted_point1(0));
       left_max_x = std::max(left_max_x, undistorted_point1(0));
       // Right border.
-      const Eigen::Vector2d world_point2 =
+      const Eigen::Vector3d world_point2 =
           camera.ImageToWorld(Eigen::Vector2d(camera.Width() - 0.5, y + 0.5));
       const Eigen::Vector2d undistorted_point2 =
           undistorted_camera.WorldToImage(world_point2);
@@ -822,14 +822,14 @@ Camera UndistortCamera(const UndistortCameraOptions& options,
 
     for (size_t x = roi_min_x; x < roi_max_x; ++x) {
       // Top border.
-      const Eigen::Vector2d world_point1 =
+      const Eigen::Vector3d world_point1 =
           camera.ImageToWorld(Eigen::Vector2d(x + 0.5, 0.5));
       const Eigen::Vector2d undistorted_point1 =
           undistorted_camera.WorldToImage(world_point1);
       top_min_y = std::min(top_min_y, undistorted_point1(1));
       top_max_y = std::max(top_max_y, undistorted_point1(1));
       // Bottom border.
-      const Eigen::Vector2d world_point2 =
+      const Eigen::Vector3d world_point2 =
           camera.ImageToWorld(Eigen::Vector2d(x + 0.5, camera.Height() - 0.5));
       const Eigen::Vector2d undistorted_point2 =
           undistorted_camera.WorldToImage(world_point2);

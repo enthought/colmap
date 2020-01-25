@@ -84,8 +84,100 @@ void CenterAndNormalizeImagePoints(const std::vector<Eigen::Vector2d>& points,
   }
 }
 
+void CenterAndNormalizeImagePoints(const std::vector<Eigen::Vector3d>& points,
+                                   std::vector<Eigen::Vector3d>* normed_points,
+                                   Eigen::Matrix3d* matrix) {
+  // Calculate centroid
+  Eigen::Vector3d centroid(0, 0, 0);
+  for (const auto point : points) {
+    centroid += point;
+  }
+  centroid /= points.size();
+
+  // Root mean square error to centroid of all points
+  double rms_mean_dist = 0;
+  for (const auto point : points) {
+    rms_mean_dist += (point - centroid).squaredNorm();
+  }
+  rms_mean_dist = std::sqrt(rms_mean_dist / points.size());
+
+  // Compose normalization matrix
+  const double norm_factor = std::sqrt(2.0) / rms_mean_dist;
+  *matrix << norm_factor, 0, -norm_factor * centroid(0), 0, norm_factor,
+      -norm_factor * centroid(1), 0, 0, 1;
+
+  // Apply normalization matrix
+  normed_points->resize(points.size());
+
+  const double M_00 = (*matrix)(0, 0);
+  const double M_01 = (*matrix)(0, 1);
+  const double M_02 = (*matrix)(0, 2);
+  const double M_10 = (*matrix)(1, 0);
+  const double M_11 = (*matrix)(1, 1);
+  const double M_12 = (*matrix)(1, 2);
+  const double M_20 = (*matrix)(2, 0);
+  const double M_21 = (*matrix)(2, 1);
+  const double M_22 = (*matrix)(2, 2);
+
+  for (size_t i = 0; i < points.size(); ++i) {
+    const double p_0 = points[i](0);
+    const double p_1 = points[i](1);
+    const double p_2 = points[i](2);
+
+    (*normed_points)[i](0) = M_00 * p_0 + M_01 * p_1 + M_02 * p_2;
+    (*normed_points)[i](1) = M_10 * p_0 + M_11 * p_1 + M_12 * p_2;
+    (*normed_points)[i](2) = M_20 * p_0 + M_21 * p_1 + M_22 * p_2;
+  }
+}
+
 void ComputeSquaredSampsonError(const std::vector<Eigen::Vector2d>& points1,
                                 const std::vector<Eigen::Vector2d>& points2,
+                                const Eigen::Matrix3d& F,
+                                std::vector<double>* residuals) {
+  CHECK_EQ(points1.size(), points2.size());
+
+  residuals->resize(points1.size());
+
+  // Note that this code might not be as nice as Eigen expressions,
+  // but it is significantly faster in various tests
+
+  const double F_00 = F(0, 0);
+  const double F_01 = F(0, 1);
+  const double F_02 = F(0, 2);
+  const double F_10 = F(1, 0);
+  const double F_11 = F(1, 1);
+  const double F_12 = F(1, 2);
+  const double F_20 = F(2, 0);
+  const double F_21 = F(2, 1);
+  const double F_22 = F(2, 2);
+
+  for (size_t i = 0; i < points1.size(); ++i) {
+    const double x1_0 = points1[i](0);
+    const double x1_1 = points1[i](1);
+    const double x2_0 = points2[i](0);
+    const double x2_1 = points2[i](1);
+
+    // Fx1 = F * points1[i].homogeneous();
+    const double Fx1_0 = F_00 * x1_0 + F_01 * x1_1 + F_02;
+    const double Fx1_1 = F_10 * x1_0 + F_11 * x1_1 + F_12;
+    const double Fx1_2 = F_20 * x1_0 + F_21 * x1_1 + F_22;
+
+    // Ftx2 = F.transpose() * points2[i].homogeneous();
+    const double Ftx2_0 = F_00 * x2_0 + F_10 * x2_1 + F_20;
+    const double Ftx2_1 = F_01 * x2_0 + F_11 * x2_1 + F_21;
+
+    // x2tFx1 = points2[i].homogeneous().transpose() * Fx1;
+    const double x2tFx1 = x2_0 * Fx1_0 + x2_1 * Fx1_1 + Fx1_2;
+
+    // Sampson distance
+    (*residuals)[i] =
+        x2tFx1 * x2tFx1 /
+        (Fx1_0 * Fx1_0 + Fx1_1 * Fx1_1 + Ftx2_0 * Ftx2_0 + Ftx2_1 * Ftx2_1);
+  }
+}
+
+void ComputeSquaredSampsonError(const std::vector<Eigen::Vector3d>& points1,
+                                const std::vector<Eigen::Vector3d>& points2,
                                 const Eigen::Matrix3d& E,
                                 std::vector<double>* residuals) {
   CHECK_EQ(points1.size(), points2.size());
@@ -108,30 +200,34 @@ void ComputeSquaredSampsonError(const std::vector<Eigen::Vector2d>& points1,
   for (size_t i = 0; i < points1.size(); ++i) {
     const double x1_0 = points1[i](0);
     const double x1_1 = points1[i](1);
+    const double x1_2 = points1[i](2);
     const double x2_0 = points2[i](0);
     const double x2_1 = points2[i](1);
+    const double x2_2 = points2[i](2);
 
-    // Ex1 = E * points1[i].homogeneous();
-    const double Ex1_0 = E_00 * x1_0 + E_01 * x1_1 + E_02;
-    const double Ex1_1 = E_10 * x1_0 + E_11 * x1_1 + E_12;
-    const double Ex1_2 = E_20 * x1_0 + E_21 * x1_1 + E_22;
+    // Ex1 = E * points1[i];
+    const double Ex1_0 = E_00 * x1_0 + E_01 * x1_1 + E_02 * x1_2;
+    const double Ex1_1 = E_10 * x1_0 + E_11 * x1_1 + E_12 * x1_2;
+    const double Ex1_2 = E_20 * x1_0 + E_21 * x1_1 + E_22 * x1_2;
 
-    // Etx2 = E.transpose() * points2[i].homogeneous();
-    const double Etx2_0 = E_00 * x2_0 + E_10 * x2_1 + E_20;
-    const double Etx2_1 = E_01 * x2_0 + E_11 * x2_1 + E_21;
+    // Etx2 = E.transpose() * points2[i];
+    const double Etx2_0 = E_00 * x2_0 + E_10 * x2_1 + E_20 * x2_2;
+    const double Etx2_1 = E_01 * x2_0 + E_11 * x2_1 + E_21 * x2_2;
+    const double Etx2_2 = E_02 * x2_0 + E_12 * x2_1 + E_22 * x2_2;
 
-    // x2tEx1 = points2[i].homogeneous().transpose() * Ex1;
-    const double x2tEx1 = x2_0 * Ex1_0 + x2_1 * Ex1_1 + Ex1_2;
+    // x2tEx1 = points2[i].transpose() * Ex1;
+    const double x2tEx1 = x2_0 * Ex1_0 + x2_1 * Ex1_1 + x2_2 * Ex1_2;
 
     // Sampson distance
     (*residuals)[i] =
         x2tEx1 * x2tEx1 /
-        (Ex1_0 * Ex1_0 + Ex1_1 * Ex1_1 + Etx2_0 * Etx2_0 + Etx2_1 * Etx2_1);
+        (Ex1_0 * Ex1_0 + Ex1_1 * Ex1_1 + Ex1_2 * Ex1_2 +
+         Etx2_0 * Etx2_0 + Etx2_1 * Etx2_1 + Etx2_2 * Etx2_2);
   }
 }
 
 void ComputeSquaredReprojectionError(
-    const std::vector<Eigen::Vector2d>& points2D,
+    const std::vector<Eigen::Vector3d>& points2D,
     const std::vector<Eigen::Vector3d>& points3D,
     const Eigen::Matrix3x4d& proj_matrix, std::vector<double>* residuals) {
   CHECK_EQ(points2D.size(), points3D.size());
@@ -166,15 +262,18 @@ void ComputeSquaredReprojectionError(
     if (px_2 > std::numeric_limits<double>::epsilon()) {
       const double px_0 = P_00 * X_0 + P_01 * X_1 + P_02 * X_2 + P_03;
       const double px_1 = P_10 * X_0 + P_11 * X_1 + P_12 * X_2 + P_13;
+      const double pr = sqrt(px_0 * px_0 + px_1 * px_1 + px_2 * px_2);
 
       const double x_0 = points2D[i](0);
       const double x_1 = points2D[i](1);
+      const double x_2 = points2D[i](2);
+      const double r = sqrt(x_0 * x_0 + x_1 * x_1 + x_2 * x_2);
 
-      const double inv_px_2 = 1.0 / px_2;
-      const double dx_0 = x_0 - px_0 * inv_px_2;
-      const double dx_1 = x_1 - px_1 * inv_px_2;
+      const double dx_0 = x_0 / r - px_0 / pr;
+      const double dx_1 = x_1 / r - px_1 / pr;
+      const double dx_2 = x_2 / r - px_2 / pr;
 
-      (*residuals)[i] = dx_0 * dx_0 + dx_1 * dx_1;
+      (*residuals)[i] = dx_0 * dx_0 + dx_1 * dx_1 + dx_2 * dx_2;
     } else {
       (*residuals)[i] = std::numeric_limits<double>::max();
     }

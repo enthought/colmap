@@ -101,11 +101,11 @@ BOOST_AUTO_TEST_CASE(TestEightPoint) {
   };
 
   const size_t kNumPoints = 8;
-  std::vector<Eigen::Vector2d> points1(kNumPoints);
-  std::vector<Eigen::Vector2d> points2(kNumPoints);
+  std::vector<Eigen::Vector3d> points1(kNumPoints);
+  std::vector<Eigen::Vector3d> points2(kNumPoints);
   for (size_t i = 0; i < kNumPoints; ++i) {
-    points1[i] = Eigen::Vector2d(points1_raw[2 * i], points1_raw[2 * i + 1]);
-    points2[i] = Eigen::Vector2d(points2_raw[2 * i], points2_raw[2 * i + 1]);
+    points1[i] = Eigen::Vector3d(points1_raw[2 * i], points1_raw[2 * i + 1], 1.0);
+    points2[i] = Eigen::Vector3d(points2_raw[2 * i], points2_raw[2 * i + 1], 1.0);
   }
 
   EssentialMatrixEightPointEstimator estimator;

@@ -174,9 +174,9 @@ bool TwoViewGeometry::EstimateRelativePose(
   }
 
   // Extract normalized inlier points.
-  std::vector<Eigen::Vector2d> inlier_points1_normalized;
+  std::vector<Eigen::Vector3d> inlier_points1_normalized;
   inlier_points1_normalized.reserve(inlier_matches.size());
-  std::vector<Eigen::Vector2d> inlier_points2_normalized;
+  std::vector<Eigen::Vector3d> inlier_points2_normalized;
   inlier_points2_normalized.reserve(inlier_matches.size());
   for (const auto& match : inlier_matches) {
     const point2D_t idx1 = match.point2D_idx1;
@@ -241,8 +241,8 @@ void TwoViewGeometry::EstimateCalibrated(
   // Extract corresponding points.
   std::vector<Eigen::Vector2d> matched_points1(matches.size());
   std::vector<Eigen::Vector2d> matched_points2(matches.size());
-  std::vector<Eigen::Vector2d> matched_points1_normalized(matches.size());
-  std::vector<Eigen::Vector2d> matched_points2_normalized(matches.size());
+  std::vector<Eigen::Vector3d> matched_points1_normalized(matches.size());
+  std::vector<Eigen::Vector3d> matched_points2_normalized(matches.size());
   for (size_t i = 0; i < matches.size(); ++i) {
     const point2D_t idx1 = matches[i].point2D_idx1;
     const point2D_t idx2 = matches[i].point2D_idx2;

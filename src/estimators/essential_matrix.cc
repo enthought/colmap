@@ -55,17 +55,19 @@ EssentialMatrixFivePointEstimator::Estimate(const std::vector<X_t>& points1,
   for (size_t i = 0; i < points1.size(); ++i) {
     const double x1_0 = points1[i](0);
     const double x1_1 = points1[i](1);
+    const double x1_2 = points1[i](2);
     const double x2_0 = points2[i](0);
     const double x2_1 = points2[i](1);
+    const double x2_2 = points2[i](2);
     Q(i, 0) = x1_0 * x2_0;
     Q(i, 1) = x1_1 * x2_0;
-    Q(i, 2) = x2_0;
+    Q(i, 2) = x1_2 * x2_0;
     Q(i, 3) = x1_0 * x2_1;
     Q(i, 4) = x1_1 * x2_1;
-    Q(i, 5) = x2_1;
-    Q(i, 6) = x1_0;
-    Q(i, 7) = x1_1;
-    Q(i, 8) = 1;
+    Q(i, 5) = x1_2 * x2_1;
+    Q(i, 6) = x1_0 * x2_2;
+    Q(i, 7) = x1_1 * x2_2;
+    Q(i, 8) = x1_2 * x2_2;
   }
 
   // Extract the 4 Eigen vectors corresponding to the smallest singular values.
@@ -172,11 +174,12 @@ EssentialMatrixEightPointEstimator::Estimate(const std::vector<X_t>& points1,
   // Setup homogeneous linear equation as x2' * F * x1 = 0.
   Eigen::Matrix<double, Eigen::Dynamic, 9> cmatrix(points1.size(), 9);
   for (size_t i = 0; i < points1.size(); ++i) {
-    cmatrix.block<1, 3>(i, 0) = normed_points1[i].homogeneous();
+    cmatrix.block<1, 3>(i, 0) = normed_points1[i];
     cmatrix.block<1, 3>(i, 0) *= normed_points2[i].x();
-    cmatrix.block<1, 3>(i, 3) = normed_points1[i].homogeneous();
+    cmatrix.block<1, 3>(i, 3) = normed_points1[i];
     cmatrix.block<1, 3>(i, 3) *= normed_points2[i].y();
-    cmatrix.block<1, 3>(i, 6) = normed_points1[i].homogeneous();
+    cmatrix.block<1, 3>(i, 6) = normed_points1[i];
+    cmatrix.block<1, 3>(i, 6) *= normed_points2[i].z();
   }
 
   // Solve for the nullspace of the constraint matrix.

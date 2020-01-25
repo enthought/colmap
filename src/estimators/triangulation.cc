@@ -77,7 +77,7 @@ std::vector<TriangulationEstimator::M_t> TriangulationEstimator::Estimate(
 
     std::vector<Eigen::Matrix3x4d> proj_matrices;
     proj_matrices.reserve(point_data.size());
-    std::vector<Eigen::Vector2d> points;
+    std::vector<Eigen::Vector3d> points;
     points.reserve(point_data.size());
     for (size_t i = 0; i < point_data.size(); ++i) {
       proj_matrices.push_back(pose_data[i].proj_matrix);

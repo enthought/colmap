@@ -61,7 +61,7 @@ void EstimateAbsolutePoseKernel(const Camera& camera,
   }
 
   // Normalize image coordinates with current camera hypothesis.
-  std::vector<Eigen::Vector2d> points2D_N(points2D.size());
+  std::vector<Eigen::Vector3d> points2D_N(points2D.size());
   for (size_t i = 0; i < points2D.size(); ++i) {
     points2D_N[i] = scaled_camera.ImageToWorld(points2D[i]);
   }
@@ -158,8 +158,8 @@ bool EstimateAbsolutePose(const AbsolutePoseEstimationOptions& options,
 }
 
 size_t EstimateRelativePose(const RANSACOptions& ransac_options,
-                            const std::vector<Eigen::Vector2d>& points1,
-                            const std::vector<Eigen::Vector2d>& points2,
+                            const std::vector<Eigen::Vector3d>& points1,
+                            const std::vector<Eigen::Vector3d>& points2,
                             Eigen::Vector4d* qvec, Eigen::Vector3d* tvec) {
   RANSAC<EssentialMatrixFivePointEstimator> ransac(ransac_options);
   const auto report = ransac.Estimate(points1, points2);
@@ -168,8 +168,8 @@ size_t EstimateRelativePose(const RANSACOptions& ransac_options,
     return 0;
   }
 
-  std::vector<Eigen::Vector2d> inliers1(report.support.num_inliers);
-  std::vector<Eigen::Vector2d> inliers2(report.support.num_inliers);
+  std::vector<Eigen::Vector3d> inliers1(report.support.num_inliers);
+  std::vector<Eigen::Vector3d> inliers2(report.support.num_inliers);
 
   size_t j = 0;
   for (size_t i = 0; i < points1.size(); ++i) {
@@ -315,8 +315,8 @@ bool RefineAbsolutePose(const AbsolutePoseRefinementOptions& options,
 }
 
 bool RefineRelativePose(const ceres::Solver::Options& options,
-                        const std::vector<Eigen::Vector2d>& points1,
-                        const std::vector<Eigen::Vector2d>& points2,
+                        const std::vector<Eigen::Vector3d>& points1,
+                        const std::vector<Eigen::Vector3d>& points2,
                         Eigen::Vector4d* qvec, Eigen::Vector3d* tvec) {
   CHECK_EQ(points1.size(), points2.size());
 

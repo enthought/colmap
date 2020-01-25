@@ -38,26 +38,28 @@ using namespace colmap;
 
 template <typename CameraModel>
 void TestWorldToImageToWorld(const std::vector<double> params, const double u0,
-                             const double v0) {
-  double u, v, x, y, xx, yy;
-  CameraModel::WorldToImage(params.data(), u0, v0, &x, &y);
-  CameraModelWorldToImage(CameraModel::model_id, params, u0, v0, &xx, &yy);
+                             const double v0, const double w0) {
+  double u, v, w, x, y, xx, yy;
+  CameraModel::WorldToImage(params.data(), u0, v0, w0, &x, &y);
+  CameraModelWorldToImage(CameraModel::model_id, params, u0, v0, w0, &xx, &yy);
   BOOST_CHECK_EQUAL(x, xx);
   BOOST_CHECK_EQUAL(y, yy);
-  CameraModel::ImageToWorld(params.data(), x, y, &u, &v);
+  CameraModel::ImageToWorld(params.data(), x, y, &u, &v, &w);
   BOOST_CHECK_LT(std::abs(u - u0), 1e-6);
   BOOST_CHECK_LT(std::abs(v - v0), 1e-6);
+  BOOST_CHECK_LT(std::abs(w - w0), 1e-6);
 }
 
 template <typename CameraModel>
 void TestImageToWorldToImage(const std::vector<double> params, const double x0,
                              const double y0) {
-  double u, v, x, y, uu, vv;
-  CameraModel::ImageToWorld(params.data(), x0, y0, &u, &v);
-  CameraModelImageToWorld(CameraModel::model_id, params, x0, y0, &uu, &vv);
+  double u, v, w, x, y, uu, vv, ww;
+  CameraModel::ImageToWorld(params.data(), x0, y0, &u, &v, &w);
+  CameraModelImageToWorld(CameraModel::model_id, params, x0, y0, &uu, &vv, &ww);
   BOOST_CHECK_EQUAL(u, uu);
   BOOST_CHECK_EQUAL(v, vv);
-  CameraModel::WorldToImage(params.data(), u, v, &x, &y);
+  BOOST_CHECK_EQUAL(w, ww);
+  CameraModel::WorldToImage(params.data(), u, v, w, &x, &y);
   BOOST_CHECK_LT(std::abs(x - x0), 1e-6);
   BOOST_CHECK_LT(std::abs(y - y0), 1e-6);
 }
@@ -115,7 +117,7 @@ void TestModel(const std::vector<double>& params) {
 
   for (double u = -0.5; u <= 0.5; u += 0.1) {
     for (double v = -0.5; v <= 0.5; v += 0.1) {
-      TestWorldToImageToWorld<CameraModel>(params, u, v);
+      TestWorldToImageToWorld<CameraModel>(params, u, v, 1.0);
     }
   }
 

@@ -60,17 +60,50 @@ void CenterAndNormalizeImagePoints(const std::vector<Eigen::Vector2d>& points,
                                    std::vector<Eigen::Vector2d>* normed_points,
                                    Eigen::Matrix3d* matrix);
 
+// Center and normalize image points.
+//
+// The points are transformed in a two-step procedure that is expressed
+// as a transformation matrix. The matrix of the resulting points is usually
+// better conditioned than the matrix of the original points.
+//
+// Center the image points, such that the new coordinate system has its
+// origin at the centroid of the image points.
+//
+// Normalize the image points, such that the mean distance from the points
+// to the coordinate system is sqrt(2).
+//
+// @param points          Image coordinates.
+// @param normed_points   Transformed image coordinates.
+// @param matrix          3x3 transformation matrix.
+void CenterAndNormalizeImagePoints(const std::vector<Eigen::Vector3d>& points,
+                                   std::vector<Eigen::Vector3d>* normed_points,
+                                   Eigen::Matrix3d* matrix);
+
 // Calculate the residuals of a set of corresponding points and a given
-// fundamental or essential matrix.
+// fundamental matrix.
 //
 // Residuals are defined as the squared Sampson error.
 //
 // @param points1     First set of corresponding points as Nx2 matrix.
 // @param points2     Second set of corresponding points as Nx2 matrix.
-// @param E           3x3 fundamental or essential matrix.
+// @param F           3x3 fundamental matrix.
 // @param residuals   Output vector of residuals.
 void ComputeSquaredSampsonError(const std::vector<Eigen::Vector2d>& points1,
                                 const std::vector<Eigen::Vector2d>& points2,
+                                const Eigen::Matrix3d& F,
+                                std::vector<double>* residuals);
+
+// Calculate the residuals of a set of corresponding points and a given
+// essential matrix.
+//
+// Residuals are defined as the squared Sampson error.
+//
+// @param points1     First set of corresponding points as Nx3 matrix.
+// @param points2     Second set of corresponding points as Nx3 matrix.
+// @param E           3x3 essential matrix.
+// @param residuals   Output vector of residuals.
+void ComputeSquaredSampsonError(const std::vector<Eigen::Vector3d>& points1,
+                                const std::vector<Eigen::Vector3d>& points2,
                                 const Eigen::Matrix3d& E,
                                 std::vector<double>* residuals);
 
@@ -83,7 +116,7 @@ void ComputeSquaredSampsonError(const std::vector<Eigen::Vector2d>& points1,
 // @param proj_matrix   3x4 projection matrix.
 // @param residuals     Output vector of residuals.
 void ComputeSquaredReprojectionError(
-    const std::vector<Eigen::Vector2d>& points2D,
+    const std::vector<Eigen::Vector3d>& points2D,
     const std::vector<Eigen::Vector3d>& points3D,
     const Eigen::Matrix3x4d& proj_matrix, std::vector<double>* residuals);
 

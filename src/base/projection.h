@@ -131,11 +131,11 @@ double CalculateAngularError(const Eigen::Vector2d& point2D,
 //
 // The angular error is the angle between the observed viewing ray and the
 // actual viewing ray from the camera center to the 3D point.
-double CalculateNormalizedAngularError(const Eigen::Vector2d& point2D,
+double CalculateNormalizedAngularError(const Eigen::Vector3d& ray,
                                        const Eigen::Vector3d& point3D,
                                        const Eigen::Vector4d& qvec,
                                        const Eigen::Vector3d& tvec);
-double CalculateNormalizedAngularError(const Eigen::Vector2d& point2D,
+double CalculateNormalizedAngularError(const Eigen::Vector3d& ray,
                                        const Eigen::Vector3d& point3D,
                                        const Eigen::Matrix3x4d& proj_matrix);
 

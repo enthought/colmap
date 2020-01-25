@@ -65,13 +65,9 @@ class BundleAdjustmentCostFunction {
     projection[1] += tvec[1];
     projection[2] += tvec[2];
 
-    // Project to image plane.
-    projection[0] /= projection[2];
-    projection[1] /= projection[2];
-
     // Distort and transform to pixel space.
     CameraModel::WorldToImage(camera_params, projection[0], projection[1],
-                              &residuals[0], &residuals[1]);
+                              projection[2], &residuals[0], &residuals[1]);
 
     // Re-projection error.
     residuals[0] -= T(observed_x_);
@@ -124,13 +120,9 @@ class BundleAdjustmentConstantPoseCostFunction {
     projection[1] += T(ty_);
     projection[2] += T(tz_);
 
-    // Project to image plane.
-    projection[0] /= projection[2];
-    projection[1] /= projection[2];
-
     // Distort and transform to pixel space.
     CameraModel::WorldToImage(camera_params, projection[0], projection[1],
-                              &residuals[0], &residuals[1]);
+                              projection[2], &residuals[0], &residuals[1]);
 
     // Re-projection error.
     residuals[0] -= T(observed_x_);
@@ -193,13 +185,9 @@ class RigBundleAdjustmentCostFunction {
     projection[1] += tvec[1];
     projection[2] += tvec[2];
 
-    // Project to image plane.
-    projection[0] /= projection[2];
-    projection[1] /= projection[2];
-
     // Distort and transform to pixel space.
     CameraModel::WorldToImage(camera_params, projection[0], projection[1],
-                              &residuals[0], &residuals[1]);
+                              projection[2], &residuals[0], &residuals[1]);
 
     // Re-projection error.
     residuals[0] -= T(observed_x_);
@@ -222,11 +210,11 @@ class RigBundleAdjustmentCostFunction {
 // and should be down-projected using `HomogeneousVectorParameterization`.
 class RelativePoseCostFunction {
  public:
-  RelativePoseCostFunction(const Eigen::Vector2d& x1, const Eigen::Vector2d& x2)
-      : x1_(x1(0)), y1_(x1(1)), x2_(x2(0)), y2_(x2(1)) {}
+  RelativePoseCostFunction(const Eigen::Vector3d& x1, const Eigen::Vector3d& x2)
+      : x1_(x1(0)), y1_(x1(1)), z1_(x1(2)), x2_(x2(0)), y2_(x2(1)), z2_(x2(2)) {}
 
-  static ceres::CostFunction* Create(const Eigen::Vector2d& x1,
-                                     const Eigen::Vector2d& x2) {
+  static ceres::CostFunction* Create(const Eigen::Vector3d& x1,
+                                     const Eigen::Vector3d& x2) {
     return (new ceres::AutoDiffCostFunction<RelativePoseCostFunction, 1, 4, 3>(
         new RelativePoseCostFunction(x1, x2)));
   }
@@ -245,17 +233,17 @@ class RelativePoseCostFunction {
     // Essential matrix.
     const Eigen::Matrix<T, 3, 3> E = t_x * R;
 
-    // Homogeneous image coordinates.
-    const Eigen::Matrix<T, 3, 1> x1_h(T(x1_), T(y1_), T(1));
-    const Eigen::Matrix<T, 3, 1> x2_h(T(x2_), T(y2_), T(1));
+    // Camera coordinates.
+    const Eigen::Matrix<T, 3, 1> x1_h({T(x1_), T(y1_), T(z1_)});
+    const Eigen::Matrix<T, 3, 1> x2_h({T(x2_), T(y2_), T(z2_)});
 
     // Squared sampson error.
     const Eigen::Matrix<T, 3, 1> Ex1 = E * x1_h;
     const Eigen::Matrix<T, 3, 1> Etx2 = E.transpose() * x2_h;
     const T x2tEx1 = x2_h.transpose() * Ex1;
     residuals[0] = x2tEx1 * x2tEx1 /
-                   (Ex1(0) * Ex1(0) + Ex1(1) * Ex1(1) + Etx2(0) * Etx2(0) +
-                    Etx2(1) * Etx2(1));
+                   (Ex1(0) * Ex1(0) + Ex1(1) * Ex1(1) + Ex1(2)*Ex1(2) +
+                    Etx2(0) * Etx2(0) + Etx2(1) * Etx2(1) + Etx2(2)*Etx2(2));
 
     return true;
   }
@@ -263,8 +251,10 @@ class RelativePoseCostFunction {
  private:
   const double x1_;
   const double y1_;
+  const double z1_;
   const double x2_;
   const double y2_;
+  const double z2_;
 };
 
 }  // namespace colmap
